@@ -10,4 +10,5 @@ dependencies = [
     "psycopg2-binary>=2.9.10",
     "flask-socketio>=5.4.1",
     "gunicorn>=21.2.0",
+    "eventlet>=0.33.0",
 ]
