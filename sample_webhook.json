@@ -1,0 +1,36 @@
+{
+    "reviews": [
+        {
+            "app_id": 2797060,
+            "app_store_id": "1077366211",
+            "id": -16262,
+            "author": "Appbot",
+            "rating": 5,
+            "body": "You have successfully integrated Appbot. We will start posting reviews in the next 24 hours (or when your next review arrives).",
+            "subject": "Excellent!",
+            "published_at": "2024-12-16",
+            "published_at_datetime": null,
+            "version": null,
+            "country": null,
+            "country_id": null,
+            "country_code": null,
+            "translated_subject": null,
+            "translated_body": null,
+            "reply_text": null,
+            "reply_date": null,
+            "topics": [],
+            "topic_ids": [],
+            "store_id": "1",
+            "device": null,
+            "device_friendly_name": null,
+            "os_version": null,
+            "os_version_friendly_name": null,
+            "sentiment": "positive",
+            "detected_language": "English",
+            "detected_language_id": "en",
+            "permalink_url": null,
+            "reply_url": "https://app.appbot.co/apps/2797060-current-the-future-of-banking/reviews/-16262/reply",
+            "internal_url": "https://app.appbot.co/apps/2797060-current-the-future-of-banking/reviews/-16262/internal"
+        }
+    ]
+}
