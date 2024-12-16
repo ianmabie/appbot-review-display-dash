@@ -1,0 +1,14 @@
+/* Additional custom styles if needed */
+code {
+    background-color: var(--bs-dark);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+}
+
+.card {
+    border-color: var(--bs-border-color);
+}
+
+.card-header {
+    background-color: var(--bs-dark);
+}
