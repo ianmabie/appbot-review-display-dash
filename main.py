@@ -12,7 +12,7 @@ from app import app, db
 # Import models after app and db are initialized
 from models import Review
 
-socketio = SocketIO(app) # Initialize SocketIO
+socketio = SocketIO(app, cors_allowed_origins="*") # Initialize SocketIO with CORS
 
 def parse_review(review_data):
     """Parse and validate review data from webhook payload"""
@@ -85,4 +85,4 @@ with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=False)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=False, allow_unsafe_werkzeug=True)
