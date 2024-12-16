@@ -2,6 +2,7 @@ import logging
 from datetime import datetime
 from flask import request, render_template, jsonify
 import json
+from flask_socketio import SocketIO
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -10,6 +11,8 @@ logger = logging.getLogger(__name__)
 from app import app, db
 # Import models after app and db are initialized
 from models import Review
+
+socketio = SocketIO(app) # Initialize SocketIO
 
 def parse_review(review_data):
     """Parse and validate review data from webhook payload"""
@@ -61,6 +64,9 @@ def webhook():
         # Commit all reviews to database
         db.session.commit()
             
+        # Notify clients about new reviews
+        socketio.emit('new_reviews', {'count': processed_count})
+                
         return jsonify({
             'status': 'success',
             'message': f"Processed {processed_count} reviews"
@@ -79,4 +85,4 @@ with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)

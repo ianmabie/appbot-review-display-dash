@@ -6,6 +6,26 @@
     <title>App Review Webhook Receiver</title>
     <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var socket = io();
+            socket.on('new_reviews', function(data) {
+                // Trigger confetti effect
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+                
+                // Refresh the page after a short delay to show new reviews
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1000);
+            });
+        });
+    </script>
 </head>
 <body>
     <div class="container py-4">
