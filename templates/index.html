@@ -31,11 +31,9 @@
                 if (review) review.classList.add('d-none');
             });
 
-            // Add hover functionality to reviews
-            document.querySelectorAll('.review-card').forEach(card => {
-                const hideBtn = card.querySelector('.hide-btn');
-                card.addEventListener('mouseenter', () => hideBtn.classList.remove('d-none'));
-                card.addEventListener('mouseleave', () => hideBtn.classList.add('d-none'));
+            // Initialize hide buttons to be visible
+            document.querySelectorAll('.hide-btn').forEach(btn => {
+                btn.classList.remove('d-none');
             });
 
             // Handle hide button clicks
