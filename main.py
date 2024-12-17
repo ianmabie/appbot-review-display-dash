@@ -12,7 +12,8 @@ from app import app, db
 # Import models after app and db are initialized
 from models import Review
 
-socketio = SocketIO(app, cors_allowed_origins="*") # Initialize SocketIO with CORS
+# SocketIO is already initialized in app.py
+from app import socketio
 
 def parse_review(review_data):
     """Parse and validate review data from webhook payload"""
