@@ -43,6 +43,10 @@ def index():
 def webhook():
     """Handle incoming webhook requests"""
     try:
+        # Log raw request data
+        logger.info("Received webhook payload:")
+        logger.info(json.dumps(request.get_json(), indent=2))
+        
         # Get the JSON data from the request
         data = request.get_json()
         
