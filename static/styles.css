@@ -3,6 +3,19 @@ body {
     background-color: black !important;
 }
 
+.sticky-header {
+    position: sticky;
+    top: 0;
+    background-color: black;
+    z-index: 100;
+    padding-top: 1rem;
+}
+
+.star-rating {
+    background: none !important;
+    padding: 0;
+}
+
 code {
     background-color: var(--bs-dark);
     padding: 0.2rem 0.4rem;

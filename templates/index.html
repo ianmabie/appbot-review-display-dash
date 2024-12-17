@@ -29,7 +29,7 @@
 </head>
 <body>
     <div class="container py-4">
-        <header class="pb-3 mb-4 border-bottom">
+        <header class="pb-3 mb-4 border-bottom sticky-header">
             <h1 class="display-5 fw-bold">App Reviews</h1>
         </header>
 
@@ -45,7 +45,7 @@
                                     <span class="text-muted ms-2">{{ review.published_at }}</span>
                                 </div>
                                 <div>
-                                    <span class="badge bg-primary">{{ "⭐" * review.rating }}</span>
+                                    <span class="badge star-rating">{{ "⭐" * review.rating }}</span>
                                     <span class="badge {% if review.sentiment == 'positive' %}bg-success{% elif review.sentiment == 'negative' %}bg-danger{% else %}bg-secondary{% endif %} ms-2">
                                         {{ review.sentiment|capitalize }}
                                     </span>

@@ -1,4 +1,5 @@
 from datetime import datetime
+from pytz import timezone
 from app import db
 
 class Review(db.Model):
@@ -16,6 +17,8 @@ class Review(db.Model):
     received_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
+        # Convert UTC to EST
+        est_time = self.received_at.astimezone(timezone('America/New_York'))
         return {
             'author': self.author,
             'rating': self.rating,
@@ -23,5 +26,5 @@ class Review(db.Model):
             'body': self.body,
             'published_at': self.published_at.strftime('%Y-%m-%d') if self.published_at else None,
             'sentiment': self.sentiment,
-            'received_at': self.received_at.strftime('%Y-%m-%d %H:%M:%S')
+            'received_at': est_time.strftime('%Y-%m-%d %I:%M %p EST')
         }
