@@ -12,17 +12,50 @@
         document.addEventListener('DOMContentLoaded', function() {
             var socket = io();
             socket.on('new_reviews', function(data) {
-                // Trigger confetti effect
                 confetti({
                     particleCount: 100,
                     spread: 70,
                     origin: { y: 0.6 }
                 });
-                
-                // Refresh the page after a short delay to show new reviews
                 setTimeout(function() {
                     window.location.reload();
                 }, 1000);
+            });
+
+            // Hide/Show functionality
+            const hiddenReviews = new Set(JSON.parse(localStorage.getItem('hiddenReviews') || '[]'));
+            
+            // Initialize hidden state
+            hiddenReviews.forEach(id => {
+                const review = document.querySelector(`[data-review-id="${id}"]`);
+                if (review) review.classList.add('d-none');
+            });
+
+            // Add hover functionality to reviews
+            document.querySelectorAll('.review-card').forEach(card => {
+                const hideBtn = card.querySelector('.hide-btn');
+                card.addEventListener('mouseenter', () => hideBtn.classList.remove('d-none'));
+                card.addEventListener('mouseleave', () => hideBtn.classList.add('d-none'));
+            });
+
+            // Handle hide button clicks
+            document.querySelectorAll('.hide-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const card = btn.closest('.review-card');
+                    const reviewId = card.dataset.reviewId;
+                    hiddenReviews.add(reviewId);
+                    localStorage.setItem('hiddenReviews', JSON.stringify([...hiddenReviews]));
+                    card.classList.add('d-none');
+                });
+            });
+
+            // Handle unhide all
+            document.getElementById('unhideAll').addEventListener('click', () => {
+                hiddenReviews.clear();
+                localStorage.setItem('hiddenReviews', '[]');
+                document.querySelectorAll('.review-card').forEach(card => {
+                    card.classList.remove('d-none');
+                });
             });
         });
     </script>
@@ -38,7 +71,10 @@
                 <h2 class="mb-3">Received Reviews</h2>
                 {% if reviews %}
                     {% for review in reviews %}
-                        <div class="card mb-3">
+                        <div class="card mb-3 review-card" data-review-id="{{ review.id }}">
+                            <button class="btn btn-sm btn-outline-danger hide-btn d-none">
+                                <small>Hide</small>
+                            </button>
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <div>
                                     <strong>{{ review.author }}</strong>
@@ -66,5 +102,8 @@
             </div>
         </div>
     </div>
+    <button id="unhideAll" class="btn btn-primary position-fixed bottom-0 end-0 m-3">
+        Show Hidden Reviews
+    </button>
 </body>
 </html>

@@ -20,6 +20,7 @@ class Review(db.Model):
         # Convert UTC to EST
         est_time = self.received_at.astimezone(timezone('America/New_York'))
         return {
+            'id': self.id,
             'author': self.author,
             'rating': self.rating,
             'subject': self.subject,
