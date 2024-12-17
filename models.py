@@ -26,5 +26,5 @@ class Review(db.Model):
             'body': self.body,
             'published_at': self.published_at.strftime('%Y-%m-%d') if self.published_at else None,
             'sentiment': self.sentiment,
-            'received_at': est_time.strftime('%Y-%m-%d %I:%M %p EST')
+            'received_at': est_time.strftime('%B %d, %Y %I %p EST')
         }
