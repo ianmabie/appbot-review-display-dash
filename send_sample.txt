@@ -1,0 +1,4 @@
+sends the sample_webhook.json test review via the shell
+
+
+curl -X POST -H "Content-Type: application/json" -d @sample_webhook.json https://webhook-app-review-parser-imabie.replit.app/webhook

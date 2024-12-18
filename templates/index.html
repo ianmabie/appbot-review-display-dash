@@ -100,8 +100,28 @@
             </div>
         </div>
     </div>
-    <button id="unhideAll" class="btn btn-primary position-fixed bottom-0 end-0 m-3">
-        Show Hidden Reviews
-    </button>
+    <div class="position-fixed bottom-0 end-0 m-3 d-flex gap-2">
+        <button id="hideTestReviews" class="btn btn-warning">
+            Hide Test Reviews
+        </button>
+        <button id="unhideAll" class="btn btn-primary">
+            Show Hidden Reviews
+        </button>
+    </div>
+    <script>
+        // Add hide test reviews functionality
+        document.getElementById('hideTestReviews').addEventListener('click', () => {
+            const hiddenReviews = new Set(JSON.parse(localStorage.getItem('hiddenReviews') || '[]'));
+            document.querySelectorAll('.review-card').forEach(card => {
+                const author = card.querySelector('strong').textContent.trim();
+                if (author === 'test' || author === 'Appbot') {
+                    const reviewId = card.dataset.reviewId;
+                    hiddenReviews.add(reviewId);
+                    card.classList.add('d-none');
+                }
+            });
+            localStorage.setItem('hiddenReviews', JSON.stringify([...hiddenReviews]));
+        });
+    </script>
 </body>
 </html>

@@ -11,4 +11,5 @@ dependencies = [
     "flask-socketio>=5.4.1",
     "gunicorn>=21.2.0",
     "eventlet>=0.33.0",
+    "pytz>=2024.2",
 ]
