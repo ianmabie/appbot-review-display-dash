@@ -25,11 +25,16 @@
             // Hide/Show functionality
             const hiddenReviews = new Set(JSON.parse(localStorage.getItem('hiddenReviews') || '[]'));
             
-            // Initialize hidden state
-            hiddenReviews.forEach(id => {
-                const review = document.querySelector(`[data-review-id="${id}"]`);
-                if (review) review.classList.add('d-none');
+            // Hide test reviews by default
+            document.querySelectorAll('.review-card').forEach(card => {
+                const author = card.querySelector('strong').textContent.trim();
+                if (author === 'test' || author === 'Appbot') {
+                    const reviewId = card.dataset.reviewId;
+                    hiddenReviews.add(reviewId);
+                    card.classList.add('d-none');
+                }
             });
+            localStorage.setItem('hiddenReviews', JSON.stringify([...hiddenReviews]));
 
             // Initialize hide buttons to be visible
             document.querySelectorAll('.hide-btn').forEach(btn => {
@@ -100,28 +105,10 @@
             </div>
         </div>
     </div>
-    <div class="position-fixed bottom-0 end-0 m-3 d-flex gap-2">
-        <button id="hideTestReviews" class="btn btn-warning">
-            Hide Tests
-        </button>
+    <div class="position-fixed bottom-0 end-0 m-3">
         <button id="unhideAll" class="btn btn-primary">
             Show All
         </button>
     </div>
-    <script>
-        // Add hide test reviews functionality
-        document.getElementById('hideTestReviews').addEventListener('click', () => {
-            const hiddenReviews = new Set(JSON.parse(localStorage.getItem('hiddenReviews') || '[]'));
-            document.querySelectorAll('.review-card').forEach(card => {
-                const author = card.querySelector('strong').textContent.trim();
-                if (author === 'test' || author === 'Appbot') {
-                    const reviewId = card.dataset.reviewId;
-                    hiddenReviews.add(reviewId);
-                    card.classList.add('d-none');
-                }
-            });
-            localStorage.setItem('hiddenReviews', JSON.stringify([...hiddenReviews]));
-        });
-    </script>
 </body>
 </html>
