@@ -59,14 +59,14 @@
                     const rating = parseInt(card.querySelector('.star-rating').textContent.length);
                     if (e.target.checked) {
                         card.classList.remove('d-none');
-                        pageTitle.textContent = 'App Reviews - All Reviews';
+                        pageTitle.textContent = 'All App Reviews';
                     } else {
                         if (rating === 5) {
                             card.classList.remove('d-none');
                         } else {
                             card.classList.add('d-none');
                         }
-                        pageTitle.textContent = 'App Reviews - 5 Star';
+                        pageTitle.textContent = '5 Star App Reviews';
                     }
                 });
             });
@@ -78,7 +78,7 @@
         <header class="pb-3 mb-4 border-bottom sticky-header">
             <div class="d-flex align-items-center gap-3">
                 <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" height="50">
-                <h1 class="display-5 fw-bold m-0" id="pageTitle">App Reviews - All Reviews</h1>
+                <h1 class="display-5 fw-bold m-0" id="pageTitle">All App Reviews</h1>
             </div>
         </header>
 
