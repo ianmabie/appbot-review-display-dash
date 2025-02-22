@@ -52,12 +52,22 @@
                 });
             });
 
-            // Handle unhide all
-            document.getElementById('unhideAll').addEventListener('click', () => {
-                hiddenReviews.clear();
-                localStorage.setItem('hiddenReviews', '[]');
+            // Handle review toggle
+            document.getElementById('reviewToggle').addEventListener('change', (e) => {
+                const pageTitle = document.getElementById('pageTitle');
                 document.querySelectorAll('.review-card').forEach(card => {
-                    card.classList.remove('d-none');
+                    const rating = parseInt(card.querySelector('.star-rating').textContent.length);
+                    if (e.target.checked) {
+                        card.classList.remove('d-none');
+                        pageTitle.textContent = 'App Reviews - All Reviews';
+                    } else {
+                        if (rating === 5) {
+                            card.classList.remove('d-none');
+                        } else {
+                            card.classList.add('d-none');
+                        }
+                        pageTitle.textContent = 'App Reviews - 5 Star';
+                    }
                 });
             });
         });
@@ -66,7 +76,10 @@
 <body>
     <div class="container py-4">
         <header class="pb-3 mb-4 border-bottom sticky-header">
-            <h1 class="display-5 fw-bold">App Reviews</h1>
+            <div class="d-flex align-items-center gap-3">
+                <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" height="50">
+                <h1 class="display-5 fw-bold m-0" id="pageTitle">App Reviews - All Reviews</h1>
+            </div>
         </header>
 
         <div class="row">
@@ -106,9 +119,10 @@
         </div>
     </div>
     <div class="position-fixed bottom-0 end-0 m-3">
-        <button id="unhideAll" class="btn btn-primary">
-            Show All
-        </button>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="reviewToggle" checked>
+            <label class="form-check-label text-white" for="reviewToggle">Show All Reviews</label>
+        </div>
     </div>
 </body>
 </html>
