@@ -11,14 +11,40 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             var socket = io();
+            
+            // Function to apply review filter based on toggle state
+            function applyReviewFilter(checked) {
+                const pageTitle = document.getElementById('pageTitle');
+                document.querySelectorAll('.review-card').forEach(card => {
+                    const rating = parseInt(card.querySelector('.star-rating').textContent.length);
+                    if (!checked) {
+                        card.classList.remove('d-none');
+                        pageTitle.textContent = 'All App Reviews';
+                    } else {
+                        if (rating === 5) {
+                            card.classList.remove('d-none');
+                        } else {
+                            card.classList.add('d-none');
+                        }
+                        pageTitle.textContent = '~Good Vibes Only~';
+                    }
+                });
+            }
+
             socket.on('new_reviews', function(data) {
                 confetti({
                     particleCount: 100,
                     spread: 70,
                     origin: { y: 0.6 }
                 });
+                const currentState = document.getElementById('reviewToggle').checked;
                 setTimeout(function() {
                     window.location.reload();
+                    // Set timeout to restore state after reload
+                    setTimeout(() => {
+                        document.getElementById('reviewToggle').checked = currentState;
+                        applyReviewFilter(currentState);
+                    }, 100);
                 }, 1000);
             });
 
@@ -52,23 +78,14 @@
                 });
             });
 
+            // Set initial state and apply filter
+            const toggle = document.getElementById('reviewToggle');
+            toggle.checked = true;
+            applyReviewFilter(true);
+
             // Handle review toggle
-            document.getElementById('reviewToggle').addEventListener('change', (e) => {
-                const pageTitle = document.getElementById('pageTitle');
-                document.querySelectorAll('.review-card').forEach(card => {
-                    const rating = parseInt(card.querySelector('.star-rating').textContent.length);
-                    if (e.target.checked) {
-                        card.classList.remove('d-none');
-                        pageTitle.textContent = 'All App Reviews';
-                    } else {
-                        if (rating === 5) {
-                            card.classList.remove('d-none');
-                        } else {
-                            card.classList.add('d-none');
-                        }
-                        pageTitle.textContent = '5 Star App Reviews';
-                    }
-                });
+            toggle.addEventListener('change', (e) => {
+                applyReviewFilter(e.target.checked);
             });
         });
     </script>
@@ -120,8 +137,8 @@
     </div>
     <div class="position-fixed bottom-0 end-0 m-3">
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="reviewToggle" checked>
-            <label class="form-check-label text-white" for="reviewToggle">Show All Reviews</label>
+            <input class="form-check-input" type="checkbox" id="reviewToggle">
+            <label class="form-check-label text-white" for="reviewToggle">good vibes only</label>
         </div>
     </div>
 </body>
