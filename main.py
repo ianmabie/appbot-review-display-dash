@@ -62,11 +62,20 @@ def webhook():
                 db.session.add(review)
                 processed_count += 1
                 logger.info(f"Received review from {review.author}")
+                
+                # Check and maintain 100 review limit
+                review_count = Review.query.count()
+                if review_count > 100:
+                    # Delete oldest reviews beyond the 100 limit
+                    oldest_reviews = Review.query.order_by(Review.received_at.asc()).limit(review_count - 100).all()
+                    for old_review in oldest_reviews:
+                        db.session.delete(old_review)
+                        
             except ValueError as e:
                 logger.error(f"Skipping invalid review: {e}")
                 continue
         
-        # Commit all reviews to database
+        # Commit all changes to database
         db.session.commit()
             
         # Notify clients about new reviews
