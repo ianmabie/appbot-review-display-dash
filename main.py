@@ -94,30 +94,6 @@ def webhook():
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-@app.route('/cleanup', methods=['POST'])
-def cleanup():
-    """Clean up old reviews to keep only the 100 most recent"""
-    try:
-        review_count = Review.query.count()
-        if review_count > 100:
-            oldest_reviews = Review.query.order_by(Review.received_at.asc()).limit(review_count - 100).all()
-            deleted_count = 0
-            for old_review in oldest_reviews:
-                db.session.delete(old_review)
-                deleted_count += 1
-            db.session.commit()
-            return jsonify({
-                'status': 'success',
-                'message': f'Deleted {deleted_count} old reviews'
-            })
-        return jsonify({
-            'status': 'success',
-            'message': 'No cleanup needed, less than 100 reviews'
-        })
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
-
 # Create database tables
 with app.app_context():
     db.create_all()
