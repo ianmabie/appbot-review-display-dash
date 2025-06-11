@@ -59,7 +59,7 @@
             // Hide test reviews by default
             document.querySelectorAll('.review-card').forEach(card => {
                 const reviewText = card.querySelector('.review-text');
-                if (reviewText && reviewText.textContent) {
+                if (reviewText && reviewText.textContent && reviewText.textContent.trim()) {
                     const content = reviewText.textContent.toLowerCase();
                     if (content.includes('test') || content.includes('appbot')) {
                         const reviewId = card.dataset.reviewId;
@@ -85,13 +85,15 @@
 
             // Set initial state and apply filter
             const toggle = document.getElementById('reviewToggle');
-            toggle.checked = true;
-            applyReviewFilter(true);
+            if (toggle) {
+                toggle.checked = true;
+                applyReviewFilter(true);
 
-            // Handle review toggle
-            toggle.addEventListener('change', (e) => {
-                applyReviewFilter(e.target.checked);
-            });
+                // Handle review toggle
+                toggle.addEventListener('change', (e) => {
+                    applyReviewFilter(e.target.checked);
+                });
+            }
         });
     </script>
 </head>
