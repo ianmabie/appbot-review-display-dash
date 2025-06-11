@@ -52,4 +52,4 @@ def wsgi_health_check():
 if __name__ == "__main__":
     # This won't be called when run with Gunicorn, but useful for testing
     logger.info("Running WSGI application directly (not recommended for production)")
-    socketio.run(app, host='0.0.0.0', port=5000, debug=False)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=False, use_reloader=False, log_output=True, allow_unsafe_werkzeug=True)
