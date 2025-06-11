@@ -106,15 +106,15 @@ def webhook():
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-# Check required environment variables
-required_vars = ['DATABASE_URL', 'PGDATABASE', 'PGHOST', 'PGPORT', 'PGUSER', 'PGPASSWORD']
-missing_vars = [var for var in required_vars if not os.environ.get(var)]
-if missing_vars:
-    raise RuntimeError(f"Missing required environment variables: {', '.join(missing_vars)}")
-
 # Create database tables
 with app.app_context():
     db.create_all()
 
 if __name__ == '__main__':
+    # Check required environment variables only when running directly
+    required_vars = ['DATABASE_URL', 'PGDATABASE', 'PGHOST', 'PGPORT', 'PGUSER', 'PGPASSWORD']
+    missing_vars = [var for var in required_vars if not os.environ.get(var)]
+    if missing_vars:
+        raise RuntimeError(f"Missing required environment variables: {', '.join(missing_vars)}")
+    
     socketio.run(app, host='0.0.0.0', port=5000, debug=False, use_reloader=False, log_output=True, allow_unsafe_werkzeug=True)
