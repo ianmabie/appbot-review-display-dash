@@ -39,14 +39,24 @@ def parse_review(review_data):
 def index():
     """Display the main page with received reviews (limited to 100 most recent)"""
     try:
-        reviews = Review.query.order_by(Review.received_at.desc()).limit(100).all()
+        # Check if database tables exist
+        if not db.engine.dialect.has_table(db.engine.connect(), 'reviews'):
+            logger.warning("Reviews table not found, initializing database")
+            db.create_all()
+            reviews = []
+        else:
+            reviews = Review.query.order_by(Review.received_at.desc()).limit(100).all()
+        
         return render_template('index.html', reviews=reviews)
     except Exception as e:
         logger.error(f"Database error in index route: {e}")
-        db.session.rollback()
-        return render_template('error.html', 
-                             error_code=500,
-                             error_message="Unable to load reviews. Please try again in a moment."), 500
+        try:
+            db.session.rollback()
+        except:
+            pass  # Ignore rollback errors
+        
+        # Return a safe fallback page
+        return render_template('index.html', reviews=[]), 200
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -104,12 +114,41 @@ def webhook():
         return jsonify({'error': 'Internal server error'}), 500
 
 # Initialize database tables at application startup
-with app.app_context():
-    try:
-        db.create_all()
-        logger.info("Database tables initialized successfully")
-    except Exception as e:
-        logger.error(f"Database initialization error: {e}")
+def init_database():
+    """Initialize database tables and handle connection issues"""
+    max_retries = 3
+    retry_count = 0
+    
+    while retry_count < max_retries:
+        try:
+            with app.app_context():
+                # Import models to ensure they're registered with SQLAlchemy
+                from models import Review
+                
+                # Test database connection first
+                from sqlalchemy import text
+                with db.engine.connect() as connection:
+                    connection.execute(text('SELECT 1'))
+                
+                # Create all tables
+                db.create_all()
+                logger.info("Database tables initialized successfully")
+                return True
+                
+        except Exception as e:
+            retry_count += 1
+            logger.error(f"Database initialization attempt {retry_count} failed: {e}")
+            if retry_count >= max_retries:
+                logger.error("Failed to initialize database after maximum retries")
+                return False
+            import time
+            time.sleep(2)  # Wait before retry
+    
+    return False
+
+# Initialize database
+if not init_database():
+    logger.error("Database initialization failed - application may not work properly")
 
 # Expose Flask app instance for Gunicorn
 # This allows Gunicorn to find the app using 'main:app'

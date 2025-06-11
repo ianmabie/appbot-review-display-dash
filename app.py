@@ -21,6 +21,16 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 db = SQLAlchemy(app)
 socketio = SocketIO(app, cors_allowed_origins='*', logger=True, engineio_logger=True)
 
+# Database initialization function (called after all models are imported)
+def create_tables():
+    """Create database tables"""
+    try:
+        with app.app_context():
+            db.create_all()
+            app.logger.info("Database tables created successfully")
+    except Exception as e:
+        app.logger.error(f"Failed to create tables: {e}")
+
 # Custom error handlers
 @app.errorhandler(500)
 def internal_error(error):

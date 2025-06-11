@@ -15,6 +15,17 @@ class Review(db.Model):
     published_at = db.Column(db.Date)
     sentiment = db.Column(db.String(50))
     received_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __init__(self, app_id=None, app_store_id=None, author=None, rating=None, 
+                 subject=None, body=None, published_at=None, sentiment=None):
+        self.app_id = app_id
+        self.app_store_id = app_store_id
+        self.author = author
+        self.rating = rating
+        self.subject = subject
+        self.body = body
+        self.published_at = published_at
+        self.sentiment = sentiment
 
     def to_dict(self):
         # Convert UTC to EST
