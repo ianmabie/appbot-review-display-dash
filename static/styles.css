@@ -70,6 +70,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.review-card:hover .hide-btn {
+    opacity: 1;
 }
 
 .hide-btn:hover {
@@ -101,21 +107,19 @@ body {
     margin: 0;
 }
 
-.review-meta {
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #f0f0f0;
+.review-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
 }
 
 .review-date {
     font-size: 14px;
     color: #666;
     font-weight: 500;
-}
-
-.review-footer {
-    border-top: 1px solid #eee;
-    padding-top: 15px;
 }
 
 .app-store-info {

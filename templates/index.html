@@ -113,13 +113,12 @@
                             <p class="review-text">{{ review.body }}</p>
                         </div>
                         
-                        <div class="review-meta">
-                            {% if review.published_at %}
-                                <div class="review-date">{{ review.published_at.strftime('%B %d, %Y') }}</div>
-                            {% endif %}
-                        </div>
-                        
                         <div class="review-footer">
+                            <div class="review-date">
+                                {% if review.published_at %}
+                                    {{ review.published_at.strftime('%B %d, %Y') }}
+                                {% endif %}
+                            </div>
                             <div class="app-store-info">
                                 {% set store_type = 'ios' %}
                                 {% if review.app_store_id %}
