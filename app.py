@@ -6,6 +6,9 @@ from flask_socketio import SocketIO
 # Configure logging
 app = Flask(__name__)
 
+# Setup Flask secret key (required for sessions and security)
+app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'fallback-secret-key-for-development')
+
 # Configure database with connection pool settings for stability
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

@@ -14,20 +14,22 @@
             // Function to apply review filter based on toggle state
             function applyReviewFilter(checked) {
                 const pageTitle = document.getElementById('pageTitle');
-                document.querySelectorAll('.review-card').forEach(card => {
-                    const rating = parseInt(card.dataset.rating);
-                    if (!checked) {
-                        card.classList.remove('hidden');
-                        pageTitle.textContent = 'Current - App Reviews';
-                    } else {
-                        if (rating === 5) {
+                if (pageTitle) {
+                    document.querySelectorAll('.review-card').forEach(card => {
+                        const rating = parseInt(card.dataset.rating);
+                        if (!checked) {
                             card.classList.remove('hidden');
+                            pageTitle.textContent = 'Current - App Reviews';
                         } else {
-                            card.classList.add('hidden');
+                            if (rating === 5) {
+                                card.classList.remove('hidden');
+                            } else {
+                                card.classList.add('hidden');
+                            }
+                            pageTitle.textContent = 'Current - App Reviews (~Good Vibes Only~)';
                         }
-                        pageTitle.textContent = 'Current - App Reviews (~Good Vibes Only~)';
-                    }
-                });
+                    });
+                }
             }
 
             socket.on('new_reviews', function(data) {
@@ -36,13 +38,17 @@
                     spread: 70,
                     origin: { y: 0.6 }
                 });
-                const currentState = document.getElementById('reviewToggle').checked;
+                const toggleElement = document.getElementById('reviewToggle');
+                const currentState = toggleElement ? toggleElement.checked : false;
                 setTimeout(function() {
                     window.location.reload();
                     // Set timeout to restore state after reload
                     setTimeout(() => {
-                        document.getElementById('reviewToggle').checked = currentState;
-                        applyReviewFilter(currentState);
+                        const restoredToggle = document.getElementById('reviewToggle');
+                        if (restoredToggle) {
+                            restoredToggle.checked = currentState;
+                            applyReviewFilter(currentState);
+                        }
                     }, 100);
                 }, 1000);
             });
@@ -53,12 +59,14 @@
             // Hide test reviews by default
             document.querySelectorAll('.review-card').forEach(card => {
                 const reviewText = card.querySelector('.review-text');
-                if (reviewText) {
-                    const author = reviewText.textContent.toLowerCase();
-                    if (author.includes('test') || author.includes('appbot')) {
+                if (reviewText && reviewText.textContent) {
+                    const content = reviewText.textContent.toLowerCase();
+                    if (content.includes('test') || content.includes('appbot')) {
                         const reviewId = card.dataset.reviewId;
-                        hiddenReviews.add(reviewId);
-                        card.classList.add('hidden');
+                        if (reviewId) {
+                            hiddenReviews.add(reviewId);
+                            card.classList.add('hidden');
+                        }
                     }
                 }
             });

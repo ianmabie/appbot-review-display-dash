@@ -1,3 +1,4 @@
+import os
 import logging
 from datetime import datetime
 from flask import request, render_template, jsonify
@@ -102,9 +103,17 @@ def webhook():
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-# Create database tables
+# Initialize database tables at application startup
 with app.app_context():
-    db.create_all()
+    try:
+        db.create_all()
+        logger.info("Database tables initialized successfully")
+    except Exception as e:
+        logger.error(f"Database initialization error: {e}")
+
+# Expose Flask app instance for Gunicorn
+# This allows Gunicorn to find the app using 'main:app'
+application = app
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=False, allow_unsafe_werkzeug=True)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=False, use_reloader=False, log_output=True, allow_unsafe_werkzeug=True)
