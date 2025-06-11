@@ -36,9 +36,16 @@ def parse_review(review_data):
 
 @app.route('/')
 def index():
-    """Display the main page with received reviews"""
-    reviews = Review.query.order_by(Review.received_at.desc()).all()
-    return render_template('index.html', reviews=reviews)
+    """Display the main page with received reviews (limited to 100 most recent)"""
+    try:
+        reviews = Review.query.order_by(Review.received_at.desc()).limit(100).all()
+        return render_template('index.html', reviews=reviews)
+    except Exception as e:
+        logger.error(f"Database error in index route: {e}")
+        db.session.rollback()
+        return render_template('error.html', 
+                             error_code=500,
+                             error_message="Unable to load reviews. Please try again in a moment."), 500
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -68,6 +75,16 @@ def webhook():
         
         # Commit all reviews to database
         db.session.commit()
+        
+        # Keep only the 100 most recent reviews
+        total_reviews = Review.query.count()
+        if total_reviews > 100:
+            # Get IDs of reviews to delete (keeping the 100 most recent)
+            old_reviews = Review.query.order_by(Review.received_at.desc()).offset(100).all()
+            for old_review in old_reviews:
+                db.session.delete(old_review)
+            db.session.commit()
+            logger.info(f"Cleaned up {len(old_reviews)} old reviews, keeping latest 100")
             
         # Notify clients about new reviews
         socketio.emit('new_reviews', {'count': processed_count})

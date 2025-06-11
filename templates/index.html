@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App Review Webhook Receiver</title>
-    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <title>App Review Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
@@ -16,15 +15,15 @@
             function applyReviewFilter(checked) {
                 const pageTitle = document.getElementById('pageTitle');
                 document.querySelectorAll('.review-card').forEach(card => {
-                    const rating = parseInt(card.querySelector('.star-rating').textContent.length);
+                    const rating = parseInt(card.dataset.rating);
                     if (!checked) {
-                        card.classList.remove('d-none');
+                        card.classList.remove('hidden');
                         pageTitle.textContent = 'All App Reviews';
                     } else {
                         if (rating === 5) {
-                            card.classList.remove('d-none');
+                            card.classList.remove('hidden');
                         } else {
-                            card.classList.add('d-none');
+                            card.classList.add('hidden');
                         }
                         pageTitle.textContent = '~Good Vibes Only~';
                     }
@@ -53,19 +52,14 @@
             
             // Hide test reviews by default
             document.querySelectorAll('.review-card').forEach(card => {
-                const author = card.querySelector('strong').textContent.trim();
+                const author = card.querySelector('.review-author').textContent.trim();
                 if (author === 'test' || author === 'Appbot') {
                     const reviewId = card.dataset.reviewId;
                     hiddenReviews.add(reviewId);
-                    card.classList.add('d-none');
+                    card.classList.add('hidden');
                 }
             });
             localStorage.setItem('hiddenReviews', JSON.stringify([...hiddenReviews]));
-
-            // Initialize hide buttons to be visible
-            document.querySelectorAll('.hide-btn').forEach(btn => {
-                btn.classList.remove('d-none');
-            });
 
             // Handle hide button clicks
             document.querySelectorAll('.hide-btn').forEach(btn => {
@@ -74,7 +68,7 @@
                     const reviewId = card.dataset.reviewId;
                     hiddenReviews.add(reviewId);
                     localStorage.setItem('hiddenReviews', JSON.stringify([...hiddenReviews]));
-                    card.classList.add('d-none');
+                    card.classList.add('hidden');
                 });
             });
 
