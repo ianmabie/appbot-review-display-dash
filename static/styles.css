@@ -101,6 +101,18 @@ body {
     margin: 0;
 }
 
+.review-meta {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.review-date {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
+}
+
 .review-footer {
     border-top: 1px solid #eee;
     padding-top: 15px;
