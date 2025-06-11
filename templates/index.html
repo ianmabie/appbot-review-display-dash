@@ -83,14 +83,57 @@
                 });
             });
 
+            // Auto-hide functionality
+            let hideTimeout;
+            const filterToggle = document.getElementById('filterToggle');
+            const HIDE_DELAY = 3000; // 3 seconds of inactivity
+            
+            function resetHideTimer() {
+                clearTimeout(hideTimeout);
+                if (filterToggle) {
+                    filterToggle.classList.remove('hidden');
+                    hideTimeout = setTimeout(() => {
+                        filterToggle.classList.add('hidden');
+                    }, HIDE_DELAY);
+                }
+            }
+            
+            // Track mouse movement, touches, and scrolling
+            ['mousemove', 'touchstart', 'touchmove', 'scroll', 'keydown'].forEach(event => {
+                document.addEventListener(event, resetHideTimer, { passive: true });
+            });
+            
+            // Start the hide timer
+            resetHideTimer();
+
             // Set initial state and apply filter
             const toggle = document.getElementById('reviewToggle');
-            if (toggle) {
+            const toggleSwitch = document.getElementById('toggleSwitch');
+            
+            if (toggle && toggleSwitch) {
                 toggle.checked = true;
                 applyReviewFilter(true);
 
-                // Handle review toggle
+                // Handle toggle switch clicks
+                toggleSwitch.addEventListener('click', () => {
+                    toggle.checked = !toggle.checked;
+                    toggleSwitch.classList.toggle('active', toggle.checked);
+                    applyReviewFilter(toggle.checked);
+                });
+
+                // Handle label clicks
+                const label = document.querySelector('.filter-toggle label');
+                if (label) {
+                    label.addEventListener('click', () => {
+                        toggle.checked = !toggle.checked;
+                        toggleSwitch.classList.toggle('active', toggle.checked);
+                        applyReviewFilter(toggle.checked);
+                    });
+                }
+
+                // Handle checkbox change (for accessibility)
                 toggle.addEventListener('change', (e) => {
+                    toggleSwitch.classList.toggle('active', e.target.checked);
                     applyReviewFilter(e.target.checked);
                 });
             }
@@ -161,8 +204,11 @@
             {% endif %}
         </div>
         
-        <div class="filter-toggle">
+        <div class="filter-toggle" id="filterToggle">
             <input type="checkbox" id="reviewToggle" checked>
+            <div class="toggle-switch active" id="toggleSwitch">
+                <div class="toggle-slider"></div>
+            </div>
             <label for="reviewToggle">good vibes only</label>
         </div>
     </div>
