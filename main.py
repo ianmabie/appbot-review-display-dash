@@ -58,38 +58,34 @@ def parse_review(review_data):
 @app.route('/')
 def index():
     """Display the main page with received reviews (limited to 100 most recent)"""
-    reviews = []
-    database_error = False
+    from performance_monitor import performance_timer
     
-    try:
-        # Only attempt database operations if initialization was successful
-        if database_ready:
-            # Check if database tables exist
-            inspector = db.inspect(db.engine)
-            tables = inspector.get_table_names()
-            
-            if 'reviews' not in tables:
-                logger.warning("Reviews table not found, attempting to create")
-                db.create_all()
-                reviews = []
-            else:
-                reviews = Review.query.order_by(Review.received_at.desc()).limit(100).all()
-                logger.info(f"Loaded {len(reviews)} reviews from database")
-        else:
-            logger.warning("Database not ready, serving page without reviews")
-            database_error = True
+    @performance_timer
+    def load_reviews():
+        if not database_ready:
+            return [], True
         
-        return render_template('index.html', reviews=reviews, database_error=database_error)
-        
-    except Exception as e:
-        logger.error(f"Database error in index route: {e}")
         try:
-            db.session.rollback()
-        except Exception as rollback_error:
-            logger.error(f"Rollback failed: {rollback_error}")
-        
-        # Return a safe fallback page with error indication
-        return render_template('index.html', reviews=[], database_error=True), 200
+            # Use more efficient query
+            reviews = Review.query.order_by(Review.received_at.desc()).limit(100).all()
+            return reviews, False
+        except Exception as e:
+            logger.error(f"Database error: {e}")
+            try:
+                db.session.rollback()
+            except:
+                pass
+            return [], True
+    
+    reviews, database_error = load_reviews()
+    
+    response = app.make_response(render_template('index.html', reviews=reviews, database_error=database_error))
+    
+    # Add caching headers for better performance
+    response.cache_control.max_age = 30  # Cache for 30 seconds
+    response.cache_control.public = True
+    
+    return response
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -185,7 +181,9 @@ def webhook():
 
 # Database initialization with improved error handling
 def init_database():
-    """Initialize database tables with graceful error handling"""
+    """Initialize database tables with optimized error handling for deployment"""
+    import time
+    start_time = time.time()
     logger.info("Starting database initialization...")
     
     # Check if DATABASE_URL is available
@@ -194,63 +192,53 @@ def init_database():
         logger.error("DATABASE_URL environment variable not found")
         return False
     
-    logger.info(f"Database URL found: {database_url[:50]}...")
+    logger.info("Database URL found")
     
-    max_retries = 5
+    max_retries = 3  # Reduced retries for faster deployment
     retry_count = 0
     
     while retry_count < max_retries:
         try:
             with app.app_context():
-                logger.info(f"Database initialization attempt {retry_count + 1}/{max_retries}")
+                logger.info(f"Database attempt {retry_count + 1}/{max_retries}")
                 
-                # Import models to ensure they're registered with SQLAlchemy
+                # Import models
                 from models import Review
-                logger.info("Models imported for database initialization")
                 
-                # Test database connection with timeout
+                # Quick connection test
                 from sqlalchemy import text
-                logger.info("Testing database connection...")
-                
-                # Use a shorter timeout for connection test
                 connection = db.engine.connect()
                 try:
-                    result = connection.execute(text('SELECT 1'))
-                    logger.info("Database connection test successful")
+                    connection.execute(text('SELECT 1'))
+                    logger.info("Database connection verified")
                 finally:
                     connection.close()
                 
-                # Create all tables
-                logger.info("Creating database tables...")
+                # Create tables
                 db.create_all()
-                logger.info("Database tables created successfully")
                 
-                # Verify table creation
+                # Quick verification
                 inspector = db.inspect(db.engine)
                 tables = inspector.get_table_names()
-                logger.info(f"Available tables: {tables}")
                 
                 if 'reviews' in tables:
-                    logger.info("Reviews table confirmed - database initialization complete")
+                    elapsed = time.time() - start_time
+                    logger.info(f"Database ready in {elapsed:.2f}s")
                     return True
                 else:
-                    logger.warning("Reviews table not found after creation")
+                    logger.warning("Reviews table missing after creation")
                     return False
                 
         except Exception as e:
             retry_count += 1
-            logger.error(f"Database initialization attempt {retry_count} failed: {str(e)}")
+            logger.error(f"Database attempt {retry_count} failed: {str(e)}")
             
             if retry_count >= max_retries:
-                logger.error("Failed to initialize database after maximum retries")
-                logger.error("Application will continue but database functionality may be limited")
+                logger.error("Database initialization failed - continuing with limited functionality")
                 return False
                 
-            # Progressive backoff
-            import time
-            wait_time = retry_count * 2
-            logger.info(f"Waiting {wait_time} seconds before retry...")
-            time.sleep(wait_time)
+            # Shorter wait for deployment
+            time.sleep(1)
     
     return False
 

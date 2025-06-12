@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_socketio import SocketIO
 
@@ -25,13 +25,13 @@ if not database_url:
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_recycle': 280,  # Slightly less than 5 minutes
+    'pool_recycle': 300,  # 5 minutes
     'pool_pre_ping': True,
-    'pool_timeout': 30,   # Increased timeout for production
-    'max_overflow': 10,   # Allow some overflow connections
-    'pool_size': 5,       # Base pool size
+    'pool_timeout': 10,   # Faster timeout for deployment
+    'max_overflow': 0,    # No overflow for single worker
+    'pool_size': 1,       # Minimal pool for single worker
     'connect_args': {
-        'connect_timeout': 10,
+        'connect_timeout': 5,  # Faster connection timeout
         'application_name': 'webhook_receiver'
     }
 }
@@ -39,15 +39,35 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 # Initialize database
 db = SQLAlchemy(app)
 
-# Initialize SocketIO with production settings
+# Initialize SocketIO with optimized settings for deployment
 socketio = SocketIO(
     app, 
     cors_allowed_origins='*', 
     logger=False,  # Reduce verbose logging in production
     engineio_logger=False,
-    ping_timeout=60,
-    ping_interval=25
+    ping_timeout=20,  # Faster ping for deployment
+    ping_interval=10,
+    async_mode='eventlet'
 )
+
+# Initialize performance monitoring
+from performance_monitor import PerformanceMonitor
+monitor = PerformanceMonitor(app)
+
+# Optimize static file serving for deployment
+@app.after_request
+def add_performance_headers(response):
+    """Add performance optimization headers"""
+    # Cache static files for 1 hour
+    if request.endpoint == 'static':
+        response.cache_control.max_age = 3600
+        response.cache_control.public = True
+    
+    # Add security headers
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    
+    return response
 
 # Health check endpoints for deployment monitoring
 @app.route('/health')

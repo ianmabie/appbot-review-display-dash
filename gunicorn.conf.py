@@ -7,12 +7,12 @@ import multiprocessing
 bind = "0.0.0.0:5000"
 backlog = 2048
 
-# Worker processes
-workers = min(4, (multiprocessing.cpu_count() * 2) + 1)
+# Worker processes - optimized for Replit deployment
+workers = 1  # Single worker for Replit's resource constraints
 worker_class = "eventlet"  # Required for SocketIO
-worker_connections = 1000
-timeout = 120
-keepalive = 2
+worker_connections = 100  # Reduced for single worker
+timeout = 60  # Shorter timeout for faster failure detection
+keepalive = 5  # Increased keepalive for better connection reuse
 
 # Restart workers after this many requests, to prevent memory leaks
 max_requests = 1000
