@@ -26,19 +26,17 @@ try:
     logger.info("Flask application and SocketIO imported successfully")
     
     # For SocketIO applications with eventlet worker, we need to use the SocketIO WSGI app
-    # The SocketIO instance wraps the Flask app and provides WebSocket support
+    # The SocketIO instance IS the WSGI application and wraps the Flask app
     application = socketio
     
-    # Validate that the application is properly configured
-    if not hasattr(application, 'wsgi_app'):
+    # Validate that the SocketIO instance is properly configured
+    if not hasattr(application, 'server') or not hasattr(application, 'wsgi_server'):
         logger.error("SocketIO application not properly configured")
-        raise RuntimeError("SocketIO WSGI application missing")
+        raise RuntimeError("SocketIO instance missing required attributes")
     
     logger.info("WSGI application configured successfully")
     logger.info(f"Database ready status: {database_ready}")
-    
-    # Perform a quick validation
-    logger.info("WSGI application validation completed")
+    logger.info("SocketIO WSGI application ready for eventlet worker")
     
 except Exception as e:
     logger.error(f"Failed to initialize WSGI application: {e}")

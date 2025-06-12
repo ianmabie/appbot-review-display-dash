@@ -36,7 +36,11 @@ except Exception as e:
 
 # Export app and socketio for WSGI compatibility
 # This allows both 'main:app' and 'wsgi:application' deployment configurations
-__all__ = ['app', 'socketio']
+__all__ = ['app', 'socketio', 'application']
+
+# Create application alias for direct main.py deployment compatibility
+# This ensures that 'main:app' deployment configuration works with SocketIO
+application = socketio
 
 def parse_review(review_data):
     """Parse and validate review data from webhook payload"""
