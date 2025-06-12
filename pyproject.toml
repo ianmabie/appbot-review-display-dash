@@ -12,6 +12,4 @@ dependencies = [
     "gunicorn>=21.2.0",
     "eventlet>=0.33.0",
     "pytz>=2024.2",
-    "requests>=2.32.4",
-    "psutil>=7.0.0",
 ]
