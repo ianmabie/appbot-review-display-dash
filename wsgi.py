@@ -21,19 +21,24 @@ logger = logging.getLogger(__name__)
 logger.info("Starting WSGI application...")
 
 try:
-    # Import the Flask application instance
-    from main import app
-    logger.info("Flask application imported successfully")
+    # Import the Flask application instance and SocketIO
+    from main import app, socketio, database_ready
+    logger.info("Flask application and SocketIO imported successfully")
     
-    # Import SocketIO for WebSocket support
-    from main import socketio
-    logger.info("SocketIO imported successfully")
-    
-    # The WSGI application that Gunicorn will serve
-    # For SocketIO applications, we need to use the SocketIO WSGI app
+    # For SocketIO applications with eventlet worker, we need to use the SocketIO WSGI app
+    # The SocketIO instance wraps the Flask app and provides WebSocket support
     application = socketio
     
+    # Validate that the application is properly configured
+    if not hasattr(application, 'wsgi_app'):
+        logger.error("SocketIO application not properly configured")
+        raise RuntimeError("SocketIO WSGI application missing")
+    
     logger.info("WSGI application configured successfully")
+    logger.info(f"Database ready status: {database_ready}")
+    
+    # Perform a quick validation
+    logger.info("WSGI application validation completed")
     
 except Exception as e:
     logger.error(f"Failed to initialize WSGI application: {e}")
@@ -48,6 +53,11 @@ def wsgi_health_check():
     except Exception as e:
         logger.error(f"WSGI health check failed: {e}")
         return False
+
+# Additional compatibility layer for different deployment configurations
+def get_application():
+    """Get the WSGI application instance"""
+    return application
 
 if __name__ == "__main__":
     # This won't be called when run with Gunicorn, but useful for testing

@@ -27,8 +27,17 @@ access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"
 # Process naming
 proc_name = "webhook_receiver"
 
-# Application
+# Application - updated to use correct WSGI entry point
 wsgi_module = "wsgi:application"
+
+# Ensure proper SocketIO configuration
+def post_fork(server, worker):
+    """Called after a worker is forked"""
+    server.log.info(f"Worker {worker.pid} ready to serve SocketIO requests")
+
+def worker_abort(worker):
+    """Called when a worker is killed by SIGABRT"""
+    worker.log.info(f"Worker {worker.pid} aborted")
 
 # Preload the application for better performance
 preload_app = True

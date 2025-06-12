@@ -21,20 +21,22 @@ logger = logging.getLogger(__name__)
 logger.info("Starting application initialization...")
 
 try:
-    from app import app, db
+    from app import app, db, socketio
     logger.info("Flask app and database imported successfully")
     
     # Import models after app and db are initialized
     from models import Review
     logger.info("Models imported successfully")
     
-    # SocketIO is already initialized in app.py
-    from app import socketio
     logger.info("SocketIO imported successfully")
     
 except Exception as e:
     logger.error(f"Failed to import application components: {e}")
     raise
+
+# Export app and socketio for WSGI compatibility
+# This allows both 'main:app' and 'wsgi:application' deployment configurations
+__all__ = ['app', 'socketio']
 
 def parse_review(review_data):
     """Parse and validate review data from webhook payload"""
