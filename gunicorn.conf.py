@@ -27,8 +27,9 @@ access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"
 # Process naming
 proc_name = "webhook_receiver"
 
-# Application - updated to use correct WSGI entry point
-wsgi_module = "wsgi:application"
+# Application - WSGI entry point
+# Note: This is configured in the deployment command, not here
+# But we keep this for reference: wsgi:application
 
 # Ensure proper SocketIO configuration
 def post_fork(server, worker):

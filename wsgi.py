@@ -21,21 +21,30 @@ logger = logging.getLogger(__name__)
 logger.info("Starting WSGI application...")
 
 try:
-    # Import the Flask application instance and SocketIO
-    from main import app, socketio, database_ready
+    # Import the Flask application and SocketIO from app.py (not main.py to avoid circular imports)
+    from app import app, socketio
     logger.info("Flask application and SocketIO imported successfully")
+    
+    # Import and initialize database models
+    from models import Review
+    logger.info("Models imported successfully")
+    
+    # Initialize database tables
+    with app.app_context():
+        from app import db
+        db.create_all()
+        logger.info("Database tables initialized")
     
     # For SocketIO applications with eventlet worker, we need to use the SocketIO WSGI app
     # The SocketIO instance IS the WSGI application and wraps the Flask app
     application = socketio
     
     # Validate that the SocketIO instance is properly configured
-    if not hasattr(application, 'server') or not hasattr(application, 'wsgi_server'):
+    if not hasattr(application, 'server'):
         logger.error("SocketIO application not properly configured")
         raise RuntimeError("SocketIO instance missing required attributes")
     
     logger.info("WSGI application configured successfully")
-    logger.info(f"Database ready status: {database_ready}")
     logger.info("SocketIO WSGI application ready for eventlet worker")
     
 except Exception as e:
