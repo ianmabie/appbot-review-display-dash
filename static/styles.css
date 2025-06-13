@@ -43,6 +43,9 @@ body {
     background: white;
     position: relative;
     transition: transform 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    min-height: 200px;
 }
 
 .review-card:hover {
@@ -97,7 +100,8 @@ body {
 }
 
 .review-content {
-    margin-bottom: 15px;
+    flex: 1;
+    margin-bottom: 0;
 }
 
 .review-text {
@@ -111,7 +115,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 20px;
+    margin-top: auto;
     padding-top: 15px;
     border-top: 1px solid #eee;
 }
