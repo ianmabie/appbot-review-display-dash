@@ -5,7 +5,7 @@ channel = "stable-24_05"
 packages = ["iana-etc"]
 
 [deployment]
-deploymentTarget = "cloudrun"
+deploymentTarget = "gce"
 run = ["gunicorn", "--worker-class", "eventlet", "--bind", "0.0.0.0:5000", "--workers", "1", "main:app"]
 
 [workflows]
