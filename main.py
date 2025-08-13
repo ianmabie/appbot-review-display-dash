@@ -3,18 +3,15 @@ import logging
 from datetime import datetime
 from flask import request, render_template, jsonify
 import json
-from flask_socketio import SocketIO
+# SocketIO removed to reduce compute costs
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
+# Configure logging - Set to WARNING to reduce CPU usage
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 from app import app, db
 # Import models after app and db are initialized
 from models import Review
-
-# SocketIO is already initialized in app.py
-from app import socketio
 
 def parse_review(review_data):
     """Parse and validate review data from webhook payload"""
@@ -39,14 +36,8 @@ def parse_review(review_data):
 def index():
     """Display the main page with received reviews (limited to 100 most recent)"""
     try:
-        # Check if database tables exist
-        if not db.engine.dialect.has_table(db.engine.connect(), 'reviews'):
-            logger.warning("Reviews table not found, initializing database")
-            db.create_all()
-            reviews = []
-        else:
-            reviews = Review.query.order_by(Review.received_at.desc()).limit(100).all()
-        
+        # Simply query reviews, let SQLAlchemy handle connection efficiently
+        reviews = Review.query.order_by(Review.received_at.desc()).limit(100).all()
         return render_template('index.html', reviews=reviews)
     except Exception as e:
         logger.error(f"Database error in index route: {e}")
@@ -62,9 +53,8 @@ def index():
 def webhook():
     """Handle incoming webhook requests"""
     try:
-        # Log raw request data
-        logger.info("Received webhook payload:")
-        logger.info(json.dumps(request.get_json(), indent=2))
+        # Log webhook received (without verbose payload to reduce CPU usage)
+        logger.info("Webhook received")
         
         # Get the JSON data from the request
         data = request.get_json()
@@ -87,18 +77,17 @@ def webhook():
         # Commit all reviews to database
         db.session.commit()
         
-        # Keep only the 100 most recent reviews
+        # Keep only the 100 most recent reviews (optimized bulk delete)
         total_reviews = Review.query.count()
         if total_reviews > 100:
-            # Get IDs of reviews to delete (keeping the 100 most recent)
-            old_reviews = Review.query.order_by(Review.received_at.desc()).offset(100).all()
-            for old_review in old_reviews:
-                db.session.delete(old_review)
+            # Use subquery for efficient bulk delete
+            from sqlalchemy import select
+            subq = db.session.query(Review.id).order_by(Review.received_at.desc()).limit(100).subquery()
+            deleted_count = Review.query.filter(~Review.id.in_(select(subq))).delete(synchronize_session=False)
             db.session.commit()
-            logger.info(f"Cleaned up {len(old_reviews)} old reviews, keeping latest 100")
+            logger.info(f"Cleaned up {deleted_count} old reviews, keeping latest 100")
             
-        # Notify clients about new reviews
-        socketio.emit('new_reviews', {'count': processed_count})
+        # SocketIO removed - clients will refresh hourly instead
                 
         return jsonify({
             'status': 'success',
@@ -113,46 +102,30 @@ def webhook():
         db.session.rollback()
         return jsonify({'error': 'Internal server error'}), 500
 
-# Initialize database tables at application startup
+# Initialize database tables at application startup (simplified without retry loop)
 def init_database():
-    """Initialize database tables and handle connection issues"""
-    max_retries = 3
-    retry_count = 0
-    
-    while retry_count < max_retries:
-        try:
-            with app.app_context():
-                # Import models to ensure they're registered with SQLAlchemy
-                from models import Review
+    """Initialize database tables"""
+    try:
+        with app.app_context():
+            # Import models to ensure they're registered with SQLAlchemy
+            from models import Review
+            
+            # Create all tables
+            db.create_all()
+            logger.info("Database tables initialized")
+            return True
                 
-                # Test database connection first
-                from sqlalchemy import text
-                with db.engine.connect() as connection:
-                    connection.execute(text('SELECT 1'))
-                
-                # Create all tables
-                db.create_all()
-                logger.info("Database tables initialized successfully")
-                return True
-                
-        except Exception as e:
-            retry_count += 1
-            logger.error(f"Database initialization attempt {retry_count} failed: {e}")
-            if retry_count >= max_retries:
-                logger.error("Failed to initialize database after maximum retries")
-                return False
-            import time
-            time.sleep(2)  # Wait before retry
-    
-    return False
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+        return False
 
 # Initialize database
-if not init_database():
-    logger.error("Database initialization failed - application may not work properly")
+init_database()
 
 # Expose Flask app instance for Gunicorn
 # This allows Gunicorn to find the app using 'main:app'
 application = app
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=5000, debug=False, use_reloader=False, log_output=True, allow_unsafe_werkzeug=True)
+    # Run without SocketIO to reduce compute costs
+    app.run(host='0.0.0.0', port=5000, debug=False)

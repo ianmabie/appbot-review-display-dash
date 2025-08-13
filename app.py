@@ -1,7 +1,6 @@
 import os
 from flask import Flask, render_template
 from flask_sqlalchemy import SQLAlchemy
-from flask_socketio import SocketIO
 
 # Configure logging
 app = Flask(__name__)
@@ -9,17 +8,12 @@ app = Flask(__name__)
 # Setup Flask secret key (required for sessions and security)
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'fallback-secret-key-for-development')
 
-# Configure database with connection pool settings for stability
+# Configure database - removed connection pooling to reduce overhead
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_recycle': 300,
-    'pool_pre_ping': True,
-    'pool_timeout': 20,
-    'max_overflow': 0
-}
+# Removed pool settings to allow connections to close when idle
 db = SQLAlchemy(app)
-socketio = SocketIO(app, cors_allowed_origins='*', logger=True, engineio_logger=True)
+# SocketIO removed to reduce compute costs - using hourly refresh instead
 
 # Database initialization function (called after all models are imported)
 def create_tables():

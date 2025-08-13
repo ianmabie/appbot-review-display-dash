@@ -5,11 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>App Review Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <!-- Auto-refresh every hour for updated reviews (reduces compute costs) -->
+    <meta http-equiv="refresh" content="3600">
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var socket = io();
+            // Simplified frontend without real-time updates - page refreshes hourly
+            
+            // Display countdown timer for next refresh
+            const pageLoadTime = Date.now();
+            const refreshInterval = 3600000; // 1 hour in milliseconds
+            
+            function updateRefreshTimer() {
+                const elapsed = Date.now() - pageLoadTime;
+                const remaining = refreshInterval - elapsed;
+                if (remaining > 0) {
+                    const minutes = Math.floor(remaining / 60000);
+                    const seconds = Math.floor((remaining % 60000) / 1000);
+                    const timerElement = document.getElementById('refreshTimer');
+                    if (timerElement) {
+                        timerElement.textContent = `Next refresh in ${minutes}m ${seconds}s`;
+                    }
+                }
+            }
+            
+            // Update timer every 10 seconds to reduce CPU usage
+            setInterval(updateRefreshTimer, 10000);
+            updateRefreshTimer();
             
             // Function to apply review filter based on toggle state
             function applyReviewFilter(checked) {
@@ -32,79 +53,17 @@
                 }
             }
 
-            socket.on('new_reviews', function(data) {
-                confetti({
-                    particleCount: 100,
-                    spread: 70,
-                    origin: { y: 0.6 }
-                });
-                const toggleElement = document.getElementById('reviewToggle');
-                const currentState = toggleElement ? toggleElement.checked : false;
-                setTimeout(function() {
-                    window.location.reload();
-                    // Set timeout to restore state after reload
-                    setTimeout(() => {
-                        const restoredToggle = document.getElementById('reviewToggle');
-                        if (restoredToggle) {
-                            restoredToggle.checked = currentState;
-                            applyReviewFilter(currentState);
-                        }
-                    }, 100);
-                }, 1000);
-            });
-
-            // Hide/Show functionality
-            const hiddenReviews = new Set(JSON.parse(localStorage.getItem('hiddenReviews') || '[]'));
-            
+            // Simplified hide functionality - no localStorage to reduce overhead
             // Hide test reviews by default
             document.querySelectorAll('.review-card').forEach(card => {
                 const reviewText = card.querySelector('.review-text');
-                if (reviewText && reviewText.textContent && reviewText.textContent.trim()) {
+                if (reviewText && reviewText.textContent) {
                     const content = reviewText.textContent.toLowerCase();
                     if (content.includes('test') || content.includes('appbot')) {
-                        const reviewId = card.dataset.reviewId;
-                        if (reviewId) {
-                            hiddenReviews.add(reviewId);
-                            card.classList.add('hidden');
-                        }
+                        card.classList.add('hidden');
                     }
                 }
             });
-            localStorage.setItem('hiddenReviews', JSON.stringify([...hiddenReviews]));
-
-            // Handle hide button clicks
-            document.querySelectorAll('.hide-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    const card = btn.closest('.review-card');
-                    const reviewId = card.dataset.reviewId;
-                    hiddenReviews.add(reviewId);
-                    localStorage.setItem('hiddenReviews', JSON.stringify([...hiddenReviews]));
-                    card.classList.add('hidden');
-                });
-            });
-
-            // Auto-hide functionality
-            let hideTimeout;
-            const filterToggle = document.getElementById('filterToggle');
-            const HIDE_DELAY = 3000; // 3 seconds of inactivity
-            
-            function resetHideTimer() {
-                clearTimeout(hideTimeout);
-                if (filterToggle) {
-                    filterToggle.classList.remove('hidden');
-                    hideTimeout = setTimeout(() => {
-                        filterToggle.classList.add('hidden');
-                    }, HIDE_DELAY);
-                }
-            }
-            
-            // Track mouse movement, touches, and scrolling
-            ['mousemove', 'touchstart', 'touchmove', 'scroll', 'keydown'].forEach(event => {
-                document.addEventListener(event, resetHideTimer, { passive: true });
-            });
-            
-            // Start the hide timer
-            resetHideTimer();
 
             // Set initial state and apply filter
             const toggle = document.getElementById('reviewToggle');
@@ -144,6 +103,7 @@
     <div class="container">
         <header class="header">
             <h1 id="pageTitle">Current - App Reviews</h1>
+            <p id="refreshTimer" style="font-size: 0.9em; color: #666; margin-top: 5px;">Next refresh in 60m 0s</p>
         </header>
 
         <div class="reviews-container">
