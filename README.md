@@ -84,8 +84,8 @@ Send POST requests to the `/webhook` endpoint with the following JSON structure:
 
 - **Main View**: Displays the 100 most recent reviews in a responsive grid layout
 - **Filter Toggle**: Switch between viewing all reviews or only 5-star reviews
-- **Hide Reviews**: Click the × button on any review card to hide it (state persists)
-- **Real-time Updates**: New reviews trigger confetti animation and automatic refresh
+- **Hide Reviews**: Click the × button on any review card to hide it (session-based)
+- **Hourly Updates**: Dashboard automatically refreshes every hour with countdown timer
 - **Auto-hide**: Reviews containing "test" or "appbot" are automatically hidden
 
 ## API Endpoints
@@ -213,25 +213,25 @@ For maximum cost savings on Replit:
 
 - **Webhook Parser**: Validates and processes incoming review data
 - **Review Model**: SQLAlchemy model for database interactions
-- **SocketIO Integration**: Real-time client-server communication
-- **Auto-cleanup**: Maintains optimal database size
+- **Hourly Refresh**: Automatic page refresh with countdown timer
+- **Auto-cleanup**: Maintains optimal database size (100 most recent)
 - **Error Handling**: Comprehensive error handling with logging
 
 ## Deployment
 
 The application is designed to run on Replit and includes:
 - Gunicorn configuration for production
-- Eventlet worker for WebSocket support
+- Standard WSGI server (no special workers needed)
 - Automatic database initialization
 - Health checks and error recovery
 
 ## Monitoring
 
-The application includes comprehensive logging:
-- Webhook payload logging
-- Database operation tracking
-- Error monitoring and rollback handling
-- Performance metrics
+The application includes optimized logging:
+- WARNING level logging only (reduced CPU usage)
+- Essential error tracking and rollback handling
+- Database operation monitoring
+- Simplified webhook tracking (no verbose payloads)
 
 ## Contributing
 
