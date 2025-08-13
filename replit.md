@@ -55,14 +55,15 @@ Preferred communication style: Simple, everyday language.
 4. **Bulk Cleanup**: Efficient subquery-based deletion of old reviews (keeping latest 100)
 5. **UI Updates**: Dashboard refreshes automatically every hour via meta refresh tag
 
-## External Dependencies (Streamlined)
+## External Dependencies (Updated for Deployment)
 
 ### Python Packages
 - **Flask**: Web framework and routing
 - **SQLAlchemy**: Database ORM with optimized queries
 - **psycopg2**: PostgreSQL database adapter
 - **pytz**: Timezone handling for display formatting
-- **Removed**: Flask-SocketIO, Eventlet (no longer needed)
+- **eventlet**: Added back for Gunicorn deployment compatibility (v0.24.1+)
+- **Note**: Although the app was optimized to remove SocketIO, eventlet is still required for certain Gunicorn deployment configurations
 
 ### Frontend Libraries
 - **Removed**: Socket.IO Client, Canvas-Confetti (simplified architecture)
@@ -75,9 +76,10 @@ Preferred communication style: Simple, everyday language.
 - **Database Auto-initialization**: Tables created automatically on startup
 
 ### Production Setup
-- **WSGI Server**: Standard Flask or Gunicorn (simplified, no Eventlet needed)
+- **WSGI Server**: Gunicorn with sync or eventlet worker class
 - **Connection Management**: On-demand database connections without pooling
 - **Error Recovery**: Graceful handling of database disconnections
+- **Worker Configuration**: For better deployment compatibility, use sync workers instead of eventlet when possible
 
 ### Data Management
 - **Automatic Cleanup**: System maintains only 100 most recent reviews for optimal performance
@@ -98,3 +100,20 @@ Preferred communication style: Simple, everyday language.
 - **Trade-off**: Changed from real-time to hourly updates (sufficient for review monitoring)
 
 The application maintains all core functionality while dramatically reducing compute costs through architectural simplification.
+
+## Deployment Configuration (August 13, 2025)
+
+### Fixed Issues
+- **Added eventlet dependency**: Required for Gunicorn deployment compatibility (v0.24.1+)
+- **Worker Class Configuration**: Deployment uses eventlet worker class in .replit file
+
+### Deployment Recommendations
+For optimal deployment on Replit:
+1. **Use sync worker class** for better compatibility (change `--worker-class eventlet` to `--worker-class sync` in deployment configuration)
+2. **Eventlet dependency** is now included to support existing eventlet configurations
+3. **Alternative command**: `gunicorn main:app -b 0.0.0.0:5000 -w 1 --worker-class sync` for manual deployment
+
+### Configuration Notes
+- The .replit file contains deployment configuration but cannot be modified programmatically
+- If deployment fails with eventlet errors, manually change the worker class to "sync" in the deployment settings
+- The application works with both sync and eventlet workers, but sync is more reliable

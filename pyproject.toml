@@ -10,4 +10,5 @@ dependencies = [
     "psycopg2-binary>=2.9.10",
     "gunicorn>=21.2.0",
     "pytz>=2024.2",
+    "eventlet>=0.24.1",
 ]
