@@ -32,6 +32,46 @@
             setInterval(updateRefreshTimer, 10000);
             updateRefreshTimer();
             
+            // Auto-hide UI elements after inactivity
+            let inactivityTimer;
+            const inactivityDelay = 3000; // 3 seconds
+            const filterToggle = document.getElementById('filterToggle');
+            const refreshTimer = document.getElementById('refreshTimer');
+            
+            function showUIElements() {
+                if (filterToggle) {
+                    filterToggle.style.opacity = '1';
+                    filterToggle.style.pointerEvents = 'auto';
+                }
+                if (refreshTimer) {
+                    refreshTimer.style.opacity = '1';
+                }
+            }
+            
+            function hideUIElements() {
+                if (filterToggle) {
+                    filterToggle.style.opacity = '0';
+                    filterToggle.style.pointerEvents = 'none';
+                }
+                if (refreshTimer) {
+                    refreshTimer.style.opacity = '0';
+                }
+            }
+            
+            function resetInactivityTimer() {
+                clearTimeout(inactivityTimer);
+                showUIElements();
+                inactivityTimer = setTimeout(hideUIElements, inactivityDelay);
+            }
+            
+            // Listen for user activity
+            ['mousemove', 'mousedown', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
+                document.addEventListener(event, resetInactivityTimer);
+            });
+            
+            // Start the inactivity timer
+            resetInactivityTimer();
+            
             // Function to apply review filter based on toggle state
             function applyReviewFilter(checked) {
                 const pageTitle = document.getElementById('pageTitle');

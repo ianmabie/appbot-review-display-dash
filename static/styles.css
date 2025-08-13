@@ -30,6 +30,10 @@ body {
     color: black;
 }
 
+#refreshTimer {
+    transition: opacity 0.5s ease;
+}
+
 .reviews-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
