@@ -1,0 +1,232 @@
+/**
+ * Appbot Review Dashboard - Google Apps Script
+ * 
+ * This script handles:
+ * 1. Receiving webhook POST requests from Appbot with review data
+ * 2. Storing reviews in a Google Sheet
+ * 3. Serving an HTML dashboard to view reviews
+ */
+
+// Configuration
+const SHEET_NAME = 'Reviews';
+const MAX_REVIEWS = 100;
+const HEADERS = ['id', 'app_id', 'app_store_id', 'author', 'rating', 'subject', 'body', 'published_at', 'sentiment', 'received_at'];
+
+/**
+ * Handle GET requests - serve the dashboard
+ */
+function doGet(e) {
+  const template = HtmlService.createTemplateFromFile('Index');
+  template.reviews = getReviews();
+  
+  return template.evaluate()
+    .setTitle('App Review Dashboard')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1.0');
+}
+
+/**
+ * Handle POST requests - receive webhook data
+ */
+function doPost(e) {
+  try {
+    // Parse the incoming JSON
+    const data = JSON.parse(e.postData.contents);
+    
+    if (!data || !data.reviews || !Array.isArray(data.reviews)) {
+      return ContentService.createTextOutput(JSON.stringify({
+        error: 'Invalid webhook payload'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Get or create the Reviews sheet
+    const sheet = getOrCreateSheet();
+    
+    // Process each review
+    let processedCount = 0;
+    const now = new Date();
+    
+    for (const review of data.reviews) {
+      try {
+        const row = [
+          review.id || generateId(),
+          review.app_id || '',
+          review.app_store_id || '',
+          review.author || 'Unknown',
+          review.rating || 0,
+          review.subject || 'No subject',
+          review.body || 'No content',
+          review.published_at || '',
+          review.sentiment || 'unknown',
+          now.toISOString()
+        ];
+        
+        // Append the new review at the top (after header)
+        sheet.insertRowAfter(1);
+        sheet.getRange(2, 1, 1, row.length).setValues([row]);
+        processedCount++;
+        
+      } catch (err) {
+        console.error('Error processing review:', err);
+      }
+    }
+    
+    // Trim to MAX_REVIEWS
+    trimToMaxReviews(sheet);
+    
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'success',
+      message: `Processed ${processedCount} reviews`
+    })).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (err) {
+    console.error('Webhook error:', err);
+    return ContentService.createTextOutput(JSON.stringify({
+      error: 'Internal server error',
+      details: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Get or create the Reviews sheet with proper headers
+ */
+function getOrCreateSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    // Add headers
+    sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+    // Format header row
+    sheet.getRange(1, 1, 1, HEADERS.length)
+      .setFontWeight('bold')
+      .setBackground('#f3f3f3');
+    // Freeze header row
+    sheet.setFrozenRows(1);
+    // Auto-resize columns
+    for (let i = 1; i <= HEADERS.length; i++) {
+      sheet.autoResizeColumn(i);
+    }
+  }
+  
+  return sheet;
+}
+
+/**
+ * Get all reviews from the sheet
+ */
+function getReviews() {
+  const sheet = getOrCreateSheet();
+  const lastRow = sheet.getLastRow();
+  
+  if (lastRow <= 1) {
+    return []; // No data, only headers
+  }
+  
+  const data = sheet.getRange(2, 1, lastRow - 1, HEADERS.length).getValues();
+  
+  return data.map(row => ({
+    id: row[0],
+    app_id: row[1],
+    app_store_id: row[2],
+    author: row[3],
+    rating: row[4],
+    subject: row[5],
+    body: row[6],
+    published_at: row[7],
+    sentiment: row[8],
+    received_at: row[9]
+  }));
+}
+
+/**
+ * Trim the sheet to MAX_REVIEWS entries
+ */
+function trimToMaxReviews(sheet) {
+  const lastRow = sheet.getLastRow();
+  const dataRows = lastRow - 1; // Exclude header
+  
+  if (dataRows > MAX_REVIEWS) {
+    const rowsToDelete = dataRows - MAX_REVIEWS;
+    // Delete from the bottom (oldest reviews)
+    sheet.deleteRows(lastRow - rowsToDelete + 1, rowsToDelete);
+    console.log(`Deleted ${rowsToDelete} old reviews, keeping ${MAX_REVIEWS}`);
+  }
+}
+
+/**
+ * Generate a unique ID for reviews without one
+ */
+function generateId() {
+  return 'gs_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+/**
+ * Format a date string for display
+ */
+function formatDate(dateString) {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString('en-US', options);
+  } catch (e) {
+    return dateString;
+  }
+}
+
+/**
+ * Determine if a review is from Android or iOS based on app_store_id
+ */
+function getStoreType(appStoreId) {
+  if (!appStoreId) return 'ios';
+  
+  const id = String(appStoreId);
+  if (id.startsWith('com.') || id.includes('.')) {
+    return 'android';
+  }
+  if (/^\d+$/.test(id)) {
+    return 'ios';
+  }
+  return 'ios';
+}
+
+/**
+ * Test function to verify sheet setup
+ */
+function testSetup() {
+  const sheet = getOrCreateSheet();
+  console.log('Sheet created/found:', sheet.getName());
+  console.log('Headers:', sheet.getRange(1, 1, 1, HEADERS.length).getValues()[0]);
+}
+
+/**
+ * Test function to add a sample review
+ */
+function testAddReview() {
+  const testPayload = {
+    postData: {
+      contents: JSON.stringify({
+        reviews: [
+          {
+            app_id: 12345,
+            app_store_id: '1077366211',
+            author: 'Test User',
+            rating: 5,
+            subject: 'Great app!',
+            body: 'This app is amazing and works perfectly.',
+            published_at: '2025-01-15',
+            sentiment: 'positive'
+          }
+        ]
+      })
+    }
+  };
+  
+  const result = doPost(testPayload);
+  console.log('Result:', result.getContent());
+}
+
